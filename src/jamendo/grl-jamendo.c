@@ -56,6 +56,7 @@
 #define JAMENDO_BASE_ENTRY "http://api.jamendo.com/get2"
 #define JAMENDO_FORMAT     "xml"
 #define JAMENDO_RANGE      "n=%u&pn=%u"
+#define JAMENDO_ORDER      "&order=%s"
 
 #define JAMENDO_ARTIST_ENTRY JAMENDO_BASE_ENTRY "/%s/" JAMENDO_ARTIST "/" JAMENDO_FORMAT
 
@@ -65,20 +66,20 @@
 #define JAMENDO_TRACK_ENTRY  JAMENDO_BASE_ENTRY "/%s/" JAMENDO_TRACK  "/" JAMENDO_FORMAT \
   "/" JAMENDO_ALBUM "_" JAMENDO_ARTIST "+" JAMENDO_TRACK "_" JAMENDO_ALBUM
 
-#define JAMENDO_GET_ARTISTS JAMENDO_ARTIST_ENTRY "/?" JAMENDO_RANGE
-#define JAMENDO_GET_ALBUMS  JAMENDO_ALBUM_ENTRY  "/?" JAMENDO_RANGE
-#define JAMENDO_GET_TRACKS  JAMENDO_TRACK_ENTRY  "/?" JAMENDO_RANGE
+#define JAMENDO_GET_ARTISTS JAMENDO_ARTIST_ENTRY "/?" JAMENDO_RANGE JAMENDO_ORDER
+#define JAMENDO_GET_ALBUMS  JAMENDO_ALBUM_ENTRY  "/?" JAMENDO_RANGE JAMENDO_ORDER
+#define JAMENDO_GET_TRACKS  JAMENDO_TRACK_ENTRY  "/?" JAMENDO_RANGE JAMENDO_ORDER
 
-#define JAMENDO_GET_ALBUMS_FROM_ARTIST JAMENDO_ALBUM_ENTRY "/?" JAMENDO_RANGE "&artist_id=%s"
-#define JAMENDO_GET_TRACKS_FROM_ALBUM JAMENDO_TRACK_ENTRY  "/?" JAMENDO_RANGE "&album_id=%s"
+#define JAMENDO_GET_ALBUMS_FROM_ARTIST JAMENDO_ALBUM_ENTRY "/?" JAMENDO_RANGE JAMENDO_ORDER "&artist_id=%s"
+#define JAMENDO_GET_TRACKS_FROM_ALBUM JAMENDO_TRACK_ENTRY  "/?" JAMENDO_RANGE JAMENDO_ORDER "&album_id=%s"
 #define JAMENDO_GET_ARTIST JAMENDO_ARTIST_ENTRY "/?id=%s"
 
 #define JAMENDO_GET_ALBUM  JAMENDO_ALBUM_ENTRY  "/?id=%s"
 #define JAMENDO_GET_TRACK  JAMENDO_TRACK_ENTRY  "/?id=%s"
 
-#define JAMENDO_SEARCH_ARTIST JAMENDO_ARTIST_ENTRY "/?" JAMENDO_RANGE "&searchquery=%s"
-#define JAMENDO_SEARCH_ALBUM  JAMENDO_ALBUM_ENTRY  "/?" JAMENDO_RANGE "&searchquery=%s"
-#define JAMENDO_SEARCH_TRACK  JAMENDO_TRACK_ENTRY  "/?" JAMENDO_RANGE "&searchquery=%s"
+#define JAMENDO_SEARCH_ARTIST JAMENDO_ARTIST_ENTRY "/?" JAMENDO_RANGE JAMENDO_ORDER "&searchquery=%s"
+#define JAMENDO_SEARCH_ALBUM  JAMENDO_ALBUM_ENTRY  "/?" JAMENDO_RANGE JAMENDO_ORDER "&searchquery=%s"
+#define JAMENDO_SEARCH_TRACK  JAMENDO_TRACK_ENTRY  "/?" JAMENDO_RANGE JAMENDO_ORDER "&searchquery=%s"
 
 /* --- Plugin information --- */
 
@@ -798,6 +799,25 @@ get_jamendo_keys (JamendoCategory category)
   return jamendo_keys;
 }
 
+static const gchar *
+get_sort_keyword (JamendoCategory category, GList *sort_keys)
+{
+  while (sort_keys) {
+    if (sort_keys->data == GRL_METADATA_KEY_ID) {
+      return "id_asc";
+    } else if ((sort_keys->data == GRL_METADATA_KEY_TITLE) ||
+               (sort_keys->data == GRL_METADATA_KEY_ARTIST &&
+                category == JAMENDO_ARTIST_CAT) ||
+               (sort_keys->data == GRL_METADATA_KEY_ALBUM &&
+                category == JAMENDO_ALBUM_CAT)) {
+      return "alpha_asc";
+    }
+    sort_keys = g_list_next (sort_keys);
+  }
+
+  return "";
+}
+
 static gboolean
 parse_query (const gchar *query, JamendoCategory *category, gchar **term)
 {
@@ -961,6 +981,7 @@ grl_jamendo_source_browse (GrlMediaSource *source,
 {
   gchar *url = NULL;
   gchar *jamendo_keys;
+  const gchar *sort_keyword;
   gchar **container_split = NULL;
   JamendoCategory category;
   XmlParseEntries *xpe = NULL;
@@ -999,20 +1020,24 @@ grl_jamendo_source_browse (GrlMediaSource *source,
     if (category == JAMENDO_ARTIST_CAT) {
       if (container_split[1]) {
         jamendo_keys = get_jamendo_keys (JAMENDO_ALBUM_CAT);
+        sort_keyword = get_sort_keyword (JAMENDO_ARTIST_CAT, bs->sort);
         /* Requesting information from a specific artist */
         url =
           g_strdup_printf (JAMENDO_GET_ALBUMS_FROM_ARTIST,
                            jamendo_keys,
                            page_size,
                            page_number,
+                           sort_keyword,
                            container_split[1]);
       } else {
         /* Browsing through artists */
         jamendo_keys = get_jamendo_keys (JAMENDO_ARTIST_CAT);
+        sort_keyword = get_sort_keyword (JAMENDO_ARTIST_CAT, bs->sort);
         url = g_strdup_printf (JAMENDO_GET_ARTISTS,
                                jamendo_keys,
                                page_size,
-                               page_number);
+                               page_number,
+                               sort_keyword);
       }
       g_free (jamendo_keys);
 
@@ -1020,19 +1045,23 @@ grl_jamendo_source_browse (GrlMediaSource *source,
       if (container_split[1]) {
         /* Requesting information from a specific album */
         jamendo_keys = get_jamendo_keys (JAMENDO_TRACK_CAT);
+        sort_keyword = get_sort_keyword (JAMENDO_TRACK_CAT, bs->sort);
         url =
           g_strdup_printf (JAMENDO_GET_TRACKS_FROM_ALBUM,
                            jamendo_keys,
                            page_size,
                            page_number,
+                           sort_keyword,
                            container_split[1]);
       } else {
         /* Browsing through albums */
         jamendo_keys = get_jamendo_keys (JAMENDO_ALBUM_CAT);
+        sort_keyword = get_sort_keyword (JAMENDO_ALBUM_CAT, bs->sort);
         url = g_strdup_printf (JAMENDO_GET_ALBUMS,
                                jamendo_keys,
                                page_size,
-                               page_number);
+                               page_number,
+                               sort_keyword);
       }
       g_free (jamendo_keys);
 
@@ -1088,6 +1117,7 @@ grl_jamendo_source_query (GrlMediaSource *source,
   gchar *term = NULL;
   gchar *url;
   gchar *jamendo_keys = NULL;
+  const gchar *sort_keyword;
   gchar *query = NULL;
   XmlParseEntries *xpe = NULL;
   guint page_size;
@@ -1108,12 +1138,15 @@ grl_jamendo_source_query (GrlMediaSource *source,
   switch (category) {
   case JAMENDO_ARTIST_CAT:
     query = JAMENDO_SEARCH_ARTIST;
+    sort_keyword = get_sort_keyword (JAMENDO_ARTIST_CAT, qs->sort);
     break;
   case JAMENDO_ALBUM_CAT:
     query = JAMENDO_SEARCH_ALBUM;
+    sort_keyword = get_sort_keyword (JAMENDO_ALBUM_CAT, qs->sort);
     break;
   case JAMENDO_TRACK_CAT:
     query = JAMENDO_SEARCH_TRACK;
+    sort_keyword = get_sort_keyword (JAMENDO_TRACK_CAT, qs->sort);
     break;
   }
 
@@ -1128,6 +1161,7 @@ grl_jamendo_source_query (GrlMediaSource *source,
                          jamendo_keys,
                          page_size,
                          page_number,
+                         sort_keyword,
                          term);
   g_free (term);
 
@@ -1155,6 +1189,7 @@ grl_jamendo_source_search (GrlMediaSource *source,
 {
   XmlParseEntries *xpe;
   gchar *jamendo_keys;
+  const gchar *sort_keyword;
   gchar *url;
   guint page_size;
   guint page_number;
@@ -1163,6 +1198,7 @@ grl_jamendo_source_search (GrlMediaSource *source,
   g_debug ("grl_jamendo_source_search");
 
   jamendo_keys = get_jamendo_keys (JAMENDO_TRACK_CAT);
+  sort_keyword = get_sort_keyword (JAMENDO_TRACK_CAT, ss->sort);
 
   grl_paging_translate (ss->skip,
                         ss->count,
@@ -1175,7 +1211,10 @@ grl_jamendo_source_search (GrlMediaSource *source,
                          jamendo_keys,
                          page_size,
                          page_number,
+                         sort_keyword,
                          ss->text);
+
+  g_free (jamendo_keys);
 
   xpe = g_slice_new0 (XmlParseEntries);
   xpe->type = SEARCH;
