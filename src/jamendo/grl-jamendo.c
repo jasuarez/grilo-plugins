@@ -763,14 +763,14 @@ send_toplevel_categories (GrlMediaSourceBrowseSpec *bs)
 
   if (bs->skip == 0) {
     media = grl_media_box_new ();
-    update_media_from_artists (media);
+    update_media_from_albums (media);
     remaining--;
     bs->callback (bs->source, bs->browse_id, media, remaining, bs->user_data, NULL);
   }
 
   if (remaining) {
     media = grl_media_box_new ();
-    update_media_from_albums (media);
+    update_media_from_artists (media);
     bs->callback (bs->source, bs->browse_id, media, 0, bs->user_data, NULL);
   }
 }
