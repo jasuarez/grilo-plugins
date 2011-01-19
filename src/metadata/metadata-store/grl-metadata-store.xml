@@ -6,4 +6,20 @@
     <license>LGPL</license>
     <site>http://www.igalia.com</site>
   </info>
+  <browse_over_query enable=true>
+    <level content=fixed>
+      <element id=1>grlbox://grl-tracker/nmm%3AMusicPiece?title=Music&mime-type=x-grl%2Fbox</element>
+      <element id=2>grlbox://grl-tracker/nmm%3APhoto?title=Photo&mime-type=x-grl%2Fbox</element>
+      <element id=3>grlbox://grl-tracker/nmm%3AVideo?title=Video&mime-type=x-grl%2Fbox</element>
+      <level ref=1 content=query>
+        <query id=1.1>SELECT rdf:type(?urn) ?urn AS id nie:title(?urn) AS title nie:url(?urn) AS url WHERE { ?urn a nmm:MusicPiece }</query>
+      </level>
+      <level ref=2 content=query>
+        <query id=2.1>SELECT rdf:type(?urn) ?urn AS id nie:title(?urn) AS title nie:url(?urn) AS url WHERE { ?urn a nmm:Photo }</query>
+      </level>
+      <level ref=3 content=query>
+        <query id=3.1>SELECT rdf:type(?urn) ?urn AS id nie:title(?urn) AS title nie:url(?urn) AS url WHERE { ?urn a nmm:Video }</query>
+      </level>
+    </level>
+  </browse_over_query>
 </plugin>
