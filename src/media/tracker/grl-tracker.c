@@ -46,9 +46,8 @@ GRL_LOG_DOMAIN_STATIC(tracker_log_domain);
 #define RDF_TYPE_ALBUM  "nmm#MusicAlbum"
 #define RDF_TYPE_ARTIST "nmm#Artist"
 #define RDF_TYPE_AUDIO  "nfo#Audio"
-#define RDF_TYPE_MUSIC  "nmm#MusicPiece"
-#define RDF_TYPE_IMAGE  "nmm#Photo"
-#define RDF_TYPE_VIDEO  "nmm#Video"
+#define RDF_TYPE_IMAGE  "nfo#Image"
+#define RDF_TYPE_VIDEO  "nfo#Video"
 #define RDF_TYPE_BOX    "grilo#Box"
 
 /* ---- Plugin information --- */
@@ -972,7 +971,7 @@ build_grilo_media (const gchar *rdf_type)
   i = g_strv_length (rdf_single_type) - 1;
 
   while (!media && i >= 0) {
-    if (g_str_has_suffix (rdf_single_type[i], RDF_TYPE_MUSIC)) {
+    if (g_str_has_suffix (rdf_single_type[i], RDF_TYPE_AUDIO)) {
       media = grl_media_audio_new ();
     } else if (g_str_has_suffix (rdf_single_type[i], RDF_TYPE_VIDEO)) {
       media = grl_media_video_new ();
@@ -1250,17 +1249,17 @@ grl_tracker_source_supported_keys (GrlMetadataSource *source)
  * <itemizedlist>
  *   <listitem>
  *     <para>
- *       <literal>nmm#MusicPiece</literal>
+ *       <literal>nfo#Audio</literal>
  *     </para>
  *   </listitem>
  *   <listitem>
  *     <para>
- *       <literal>nmm#Video</literal>
+ *       <literal>nfo#Video</literal>
  *     </para>
  *   </listitem>
  *   <listitem>
  *     <para>
- *       <literal>nmm#Photo</literal>
+ *       <literal>nfo#Image</literal>
  *     </para>
  *   </listitem>
  *   <listitem>
@@ -1288,7 +1287,7 @@ grl_tracker_source_supported_keys (GrlMetadataSource *source)
  *            ?song            AS id
  *            nie:title(?song) AS title
  *            nie:url(?song)   AS url
- *     WHERE { ?song a nmm:MusicPiece }
+ *     WHERE { ?song a nfo:Audio }
  *   </programlisting>
  * </informalexample>
  *
@@ -1453,17 +1452,17 @@ grl_tracker_source_browse (GrlMediaSource *source,
     /* Hardcoded categories */
     media = grl_media_box_new ();
     grl_media_set_title (media, "Music");
-    grl_media_set_id (media, "nmm:MusicPiece");
+    grl_media_set_id (media, "nfo:Audio");
     bs->callback (bs->source, bs->browse_id, media, 2, bs->user_data, NULL);
 
     media = grl_media_box_new ();
-    grl_media_set_title (media, "Photo");
-    grl_media_set_id (media, "nmm:Photo");
+    grl_media_set_title (media, "Image");
+    grl_media_set_id (media, "nfo:Image");
     bs->callback (bs->source, bs->browse_id, media, 1, bs->user_data, NULL);
 
     media = grl_media_box_new ();
     grl_media_set_title (media, "Video");
-    grl_media_set_id (media, "nmm:Video");
+    grl_media_set_id (media, "nfo:Video");
     bs->callback (bs->source, bs->browse_id, media, 0, bs->user_data, NULL);
     return;
   }
