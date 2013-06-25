@@ -129,6 +129,8 @@ PKG_CHECK_MODULES(QUVI, libquvi >= 0.4.0, HAVE_QUVI=yes, HAVE_QUVI=no)
 
 PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4, HAVE_LIBSOUP=yes, HAVE_LIBSOUP=no)
 
+PKG_CHECK_MODULES(REST, rest-0.7, HAVE_REST=yes, HAVE_REST=no)
+
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0, HAVE_GTHREAD=yes, HAVE_GTHREAD=no)
 
 PKG_CHECK_MODULES(OAUTH, oauth, HAVE_OAUTH=yes, HAVE_OAUTH=no)
@@ -137,7 +139,7 @@ PKG_CHECK_MODULES(GOA, [goa-1.0 >= 3.7.1], HAVE_GOA=yes, HAVE_GOA=no)
 
 PKG_CHECK_MODULES(TOTEM_PL_PARSER, totem-plparser >= 3.4.1, HAVE_TOTEM_PL_PARSER=yes, HAVE_TOTEM_PL_PARSER=no)
 
-PKG_CHECK_MODULES([JSON], [json-glib-1.0], HAVE_JSON_GLIB=yes, HAVE_JSON_GLIB=no)
+PKG_CHECK_MODULES([JSON_GLIB], [json-glib-1.0], HAVE_JSON_GLIB=yes, HAVE_JSON_GLIB=no)
 
 PKG_CHECK_MODULES(GMIME, gmime-2.6,
                          HAVE_GMIME=yes,
@@ -1130,10 +1132,65 @@ TMDB_PLUGIN_ID="grl-tmdb"
 AC_SUBST(TMDB_PLUGIN_ID)
 AC_DEFINE_UNQUOTED([TMDB_PLUGIN_ID], ["$TMDB_PLUGIN_ID"], [TMDb plugin ID])
 
-DEPS_TMDB_CFLAGS="$DEPS_CFLAGS $LIBSOUP_CFLAGS $GRLNET_CFLAGS $JSON_CFLAGS"
+DEPS_TMDB_CFLAGS="$DEPS_CFLAGS $LIBSOUP_CFLAGS $GRLNET_CFLAGS $JSON_GLIB_CFLAGS"
 AC_SUBST(DEPS_TMDB_CFLAGS)
-DEPS_TMDB_LIBS="$DEPS_LIBS $LIBSOUP_LIBS $GRLNET_LIBS $JSON_LIBS"
+DEPS_TMDB_LIBS="$DEPS_LIBS $LIBSOUP_LIBS $GRLNET_LIBS $JSON_GLIB_LIBS"
 AC_SUBST(DEPS_TMDB_LIBS)
+
+# ----------------------------------------------------------
+# BUILD XML FACTORY PLUGIN
+# ----------------------------------------------------------
+
+AC_ARG_ENABLE(xml_factory,
+        AC_HELP_STRING([--enable-xml-factory],
+                [enable Builds sources from XML specifications (default: auto)]),
+        [
+                case "$enableval" in
+                     yes)
+                        if test "x$HAVE_GRLNET" = "xno"; then
+                           AC_MSG_ERROR([grilo-net not found, install it or use --disable-xml-factory])
+                        fi
+                        if test "x$HAVE_XML" = "xno"; then
+                           AC_MSG_ERROR([xml2 not found, install it or use --disable-xml-factory])
+                        fi
+                        if test "x$HAVE_JSON_GLIB" = "xno"; then
+                           AC_MSG_ERROR([json-glib-1.0 not found, install it or use --disable-xml-factory])
+                        fi
+                        if test "x$HAVE_REST" = "xno"; then
+                           AC_MSG_ERROR([librest not found, install it or use --disable-xml-factory])
+                        fi
+                        ;;
+                esac
+        ],
+        [
+                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_JSON_GLIB" = "xyes" -a "x$HAVE_REST" = "xyes"; then
+                   enable_xml_factory=yes
+                else
+                   enable_xml_factory=no
+                fi
+        ])
+
+AM_CONDITIONAL([XML_FACTORY_PLUGIN], [test "x$enable_xml_factory" = "xyes"])
+GRL_PLUGINS_ALL="$GRL_PLUGINS_ALL xml-factory"
+if test "x$enable_xml_factory" = "xyes"
+then
+        GRL_PLUGINS_ENABLED="$GRL_PLUGINS_ENABLED xml-factory"
+fi
+
+XML_FACTORY_PLUGIN_ID="grl-xml-factory"
+AC_SUBST(XML_FACTORY_PLUGIN_ID)
+AC_DEFINE_UNQUOTED([XML_FACTORY_PLUGIN_ID], ["$XML_FACTORY_PLUGIN_ID"], [XML Source Factory plugin ID])
+
+DEPS_XML_FACTORY_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $JSON_GLIB_CFLAGS $REST_CFLAGS"
+AC_SUBST(DEPS_XML_FACTORY_CFLAGS)
+DEPS_XML_FACTORY_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $JSON_GLIB_LIBS $REST_LIBS"
+AC_SUBST(DEPS_XML_FACTORY_LIBS)
+
+XML_FACTORY_SOURCE_LOCATION="grilo-plugins/${XML_FACTORY_PLUGIN_ID}"
+AC_SUBST(XML_FACTORY_SOURCE_LOCATION)
+
+XML_FACTORY_SCHEMA_LOCATION="${datadir}/${XML_FACTORY_SOURCE_LOCATION}"
+AC_SUBST(XML_FACTORY_SCHEMA_LOCATION)
 
 # ----------------------------------------------------------
 # GETTEXT/INTLTOOL
@@ -1188,6 +1245,8 @@ AC_CONFIG_FILES([
   src/tracker/Makefile
   src/upnp/Makefile
   src/vimeo/Makefile
+  src/xml-factory/Makefile
+  src/xml-factory/sources/Makefile
   src/youtube/Makefile
   tests/Makefile
   tests/apple-trailers/Makefile

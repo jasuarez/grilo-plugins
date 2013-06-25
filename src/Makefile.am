@@ -92,6 +92,10 @@ if VIMEO_PLUGIN
 SUBDIRS += vimeo
 endif
 
+if XML_FACTORY_PLUGIN
+SUBDIRS += xml-factory
+endif
+
 if YOUTUBE_PLUGIN
 SUBDIRS += youtube
 endif
@@ -100,7 +104,7 @@ DIST_SUBDIRS = \
 	apple-trailers bliptv bookmarks dmap fake-metadata filesystem flickr	\
 	gravatar jamendo lastfm-albumart local-metadata magnatune metadata-store\
 	optical-media podcasts raitv shoutcast tmdb tracker upnp vimeo			\
-	youtube
+	xml-factory youtube
 
 MAINTAINERCLEANFILES =	\
         *.in		\
