@@ -44,6 +44,7 @@ struct _ExpandData {
   gchar *search_text;
   GrlOperationOptions *options;
   guint max_page_size;
+  GHashTable *regexp_buffers;
 };
 
 static GRegex *
@@ -416,7 +417,7 @@ expand_param_cb (const GMatchInfo *match_info,
 static gboolean
 expand_buffer_id_cb (const GMatchInfo *match_info,
                      GString *result,
-                     GHashTable *buffers)
+                     ExpandData *data)
 {
   const gchar *buffer_content;
   gchar **match_tokens;
@@ -441,8 +442,8 @@ expand_buffer_id_cb (const GMatchInfo *match_info,
     return FALSE;
   }
 
-  if (buffers) {
-    buffer_content = g_hash_table_lookup (buffers, buffer_id);
+  if (data->regexp_buffers) {
+    buffer_content = g_hash_table_lookup (data->regexp_buffers, buffer_id);
     if (buffer_content) {
       g_string_append (result, buffer_content);
     }
@@ -508,8 +509,7 @@ expand_full (const gchar *string,
 
 static gchar *
 expand_string (const gchar *str,
-               ExpandData *expand_data,
-               GHashTable *regexp_buffers)
+               ExpandData *expand_data)
 {
   gchar *expanded_str;
 
@@ -519,7 +519,7 @@ expand_string (const gchar *str,
                               (GRegexEvalCallback) expand_param_cb,
                               expand_data,
                               (GRegexEvalCallback) expand_buffer_id_cb,
-                              regexp_buffers,
+                              expand_data,
                               (GRegexEvalCallback) expand_private_cb,
                               expand_data,
                               (GRegexEvalCallback) expand_remaining_cb,
@@ -555,6 +555,7 @@ expand_data_new (GrlXmlFactorySource *source,
   p->search_text = g_strdup (search_text);
   p->options = g_object_ref (options);
   p->max_page_size = (autosplit <= 0)? G_MAXINT: autosplit;
+  p->regexp_buffers = NULL;
 
   return p;
 }
@@ -581,8 +582,38 @@ expand_data_unref (ExpandData *data)
   }
   g_object_unref (data->options);
   g_free (data->search_text);
+  if (data->regexp_buffers) {
+    g_hash_table_unref (data->regexp_buffers);
+  }
 
   g_slice_free (ExpandData, data);
+}
+
+void
+expand_data_add_buffer (ExpandData *data,
+                        const gchar *buffer_id,
+                        const gchar *buffer_content)
+{
+  if (!data->regexp_buffers) {
+    data->regexp_buffers = g_hash_table_new_full (g_str_hash,
+                                                  g_str_equal,
+                                                  NULL,
+                                                  g_free);
+  }
+
+  g_hash_table_insert (data->regexp_buffers,
+                       (gchar *) buffer_id,
+                       g_strdup (buffer_content));
+}
+
+const gchar *expand_data_get_buffer (ExpandData *data,
+                                     const gchar *buffer_id)
+{
+  if (!data->regexp_buffers) {
+    return NULL;
+  }
+
+  return g_hash_table_lookup (data->regexp_buffers, buffer_id);
 }
 
 ExpandableString *
@@ -625,8 +656,7 @@ expandable_string_free (ExpandableString *exp_str)
 
 gchar *
 expandable_string_get_value (ExpandableString *exp_str,
-                             ExpandData *data,
-                             GHashTable *regexp_buffers)
+                             ExpandData *data)
 {
   gchar *expanded_string;
 
@@ -634,9 +664,7 @@ expandable_string_get_value (ExpandableString *exp_str,
     return exp_str->str;
   }
 
-  expanded_string = expand_string (exp_str->str,
-                                   data,
-                                   regexp_buffers);
+  expanded_string = expand_string (exp_str->str, data);
 
   if (exp_str->status == UNKNOWN) {
     if (g_strcmp0 (exp_str->str, expanded_string) == 0) {
