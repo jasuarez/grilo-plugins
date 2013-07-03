@@ -9,8 +9,9 @@ include $(top_srcdir)/gtester.mk
 
 INCLUDES = @DEPS_CFLAGS@
 
-TEST_PROGS +=	\
-	test_strings
+TEST_PROGS +=     \
+   test_replace   \
+   test_strings
 
 #check_PROGRAMS = $(TESTS)
 
@@ -25,6 +26,15 @@ test_xml_factory_defines =                                                    \
    -DXML_FACTORY_PLUGIN_PATH=\""$(abs_top_builddir)/src/xml-factory/.libs/"\" \
    -DXML_FACTORY_SPECS_PATH=\""$(abs_top_srcdir)/tests/xml-factory/sources/"\"
 
+test_relace_SOURCES =	\
+	test_replace.c
+
+test_replace_LDADD =	\
+	@DEPS_LIBS@
+
+test_replace_CFLAGS =	\
+	$(test_xml_factory_defines)
+
 test_strings_SOURCES =	\
 	test_strings.c
 
@@ -32,11 +42,11 @@ test_strings_LDADD =	\
 	@DEPS_LIBS@
 
 test_strings_CFLAGS =	\
-	-DPREFIX=$(prefix)	\
 	$(test_xml_factory_defines)
 
 # Distribute the tests data:
 dist_noinst_DATA =                     \
+   sources/xml-test-replace.xml        \
    sources/xml-test-empty-strings.xml  \
    sources/xml-test-strings.xml
 
