@@ -21,10 +21,15 @@ if TMDB_PLUGIN
 SUBDIRS += tmdb
 endif
 
+if XML_FACTORY_PLUGIN
+SUBDIRS += xml-factory
+endif
+
 DIST_SUBDIRS =    \
    apple-trailers \
    bliptv         \
-   tmdb
+   tmdb           \
+   xml-factory
 
 MAINTAINERCLEANFILES =  \
    *.in                 \

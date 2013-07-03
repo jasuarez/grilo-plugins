@@ -1252,6 +1252,7 @@ AC_CONFIG_FILES([
   tests/apple-trailers/Makefile
   tests/bliptv/Makefile
   tests/tmdb/Makefile
+  tests/xml-factory/Makefile
 ])
 
 AC_OUTPUT
