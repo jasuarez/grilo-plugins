@@ -25,6 +25,8 @@ libgrlxmlfactory_la_LDFLAGS = \
 libgrlxmlfactory_la_SOURCES = \
    grl-xml-factory.c          \
    grl-xml-factory.h          \
+	json-ghashtable.c          \
+	json-ghashtable.h          \
    fetch.c                    \
    fetch.h                    \
    log.c								\
