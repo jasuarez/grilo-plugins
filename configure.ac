@@ -6,7 +6,7 @@
 # Copyright (C) 2010, 2011 Igalia S.L.. All rights reserved.
 
 m4_define([prj_name],    [grilo-plugins])
-m4_define([prj_version], [0.2.9])
+m4_define([prj_version], [0.2.10])
 
 AC_INIT([prj_name],
         [prj_version],
@@ -124,8 +124,6 @@ PKG_CHECK_MODULES(DMAP, libdmapsharing-3.0 >= 2.9.12, HAVE_DMAP=yes, HAVE_DMAP=n
 PKG_CHECK_MODULES(SQLITE, sqlite3, HAVE_SQLITE=yes, HAVE_SQLITE=no)
 
 PKG_CHECK_MODULES(GDATA, libgdata >= 0.7.0, HAVE_GDATA=yes, HAVE_GDATA=no)
-
-PKG_CHECK_MODULES(QUVI, libquvi >= 0.4.0, HAVE_QUVI=yes, HAVE_QUVI=no)
 
 PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4, HAVE_LIBSOUP=yes, HAVE_LIBSOUP=no)
 
@@ -466,14 +464,14 @@ AC_ARG_ENABLE(youtube,
                         if test "x$HAVE_GDATA" = "xno"; then
                            AC_MSG_ERROR([libgdata not found, install it or use --disable-youtube])
                         fi
-                        if test "x$HAVE_QUVI" = "xno"; then
-                           AC_MSG_ERROR([libquvi not found, install it or use --disable-youtube])
+                        if test "x$HAVE_TOTEM_PL_PARSER" = "xno"; then
+                           AC_MSG_ERROR([totem-pl-parser not found, install it or use --disable-youtube])
                         fi
                         ;;
                 esac
         ],
         [
-                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_GDATA" = "xyes" -a "x$HAVE_QUVI" = "xyes"; then
+                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_GDATA" = "xyes" -a "x$HAVE_TOTEM_PL_PARSER" = "xyes"; then
                    enable_youtube=yes
                 else
                    enable_youtube=no
@@ -491,9 +489,9 @@ YOUTUBE_PLUGIN_ID="grl-youtube"
 AC_SUBST(YOUTUBE_PLUGIN_ID)
 AC_DEFINE_UNQUOTED([YOUTUBE_PLUGIN_ID], ["$YOUTUBE_PLUGIN_ID"], [YouTube plugin ID])
 
-DEPS_YOUTUBE_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $GTHREAD_CFLAGS $GDATA_CFLAGS $QUVI_CFLAGS"
+DEPS_YOUTUBE_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $GTHREAD_CFLAGS $GDATA_CFLAGS $TOTEM_PL_PARSER_CFLAGS"
 AC_SUBST(DEPS_YOUTUBE_CFLAGS)
-DEPS_YOUTUBE_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $GTHREAD_LIBS $GDATA_LIBS $QUVI_LIBS"
+DEPS_YOUTUBE_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $GTHREAD_LIBS $GDATA_LIBS $TOTEM_PL_PARSER_LIBS"
 AC_SUBST(DEPS_YOUTUBE_LIBS)
 
 # ----------------------------------------------------------
@@ -836,14 +834,14 @@ AC_ARG_ENABLE(vimeo,
 			               if test "x$HAVE_GCRYPT" = "xno"; then
                            AC_MSG_ERROR([libgcrypt not found, install it or use --disable-vimeo])
                         fi
-                        if test "x$HAVE_QUVI" = "xno"; then
-                           AC_MSG_ERROR([libquvi not found, install it or use --disable-vimeo])
+                        if test "x$HAVE_TOTEM_PL_PARSER" = "xno"; then
+                           AC_MSG_ERROR([totem-pl-parser not found, install it or use --disable-vimeo])
                         fi
                         ;;
                 esac
         ],
         [
-                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_GCRYPT" = "xyes" -a "x$HAVE_QUVI" = "xyes"; then
+                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_GCRYPT" = "xyes" -a "x$HAVE_TOTEM_PL_PARSER" = "xyes"; then
                    enable_vimeo=yes
                 else
                    enable_vimeo=no
@@ -861,9 +859,9 @@ VIMEO_PLUGIN_ID="grl-vimeo"
 AC_SUBST(VIMEO_PLUGIN_ID)
 AC_DEFINE_UNQUOTED([VIMEO_PLUGIN_ID], ["$VIMEO_PLUGIN_ID"], [Vimeo plugin ID])
 
-DEPS_VIMEO_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $LIBGCRYPT_CFLAGS $QUVI_CFLAGS"
+DEPS_VIMEO_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $LIBGCRYPT_CFLAGS $TOTEM_PL_PARSER_CFLAGS"
 AC_SUBST(DEPS_VIMEO_CFLAGS)
-DEPS_VIMEO_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $LIBGCRYPT_LIBS $QUVI_LIBS"
+DEPS_VIMEO_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $LIBGCRYPT_LIBS $TOTEM_PL_PARSER_LIBS"
 AC_SUBST(DEPS_VIMEO_LIBS)
 
 # ----------------------------------------------------------
@@ -1252,6 +1250,7 @@ AC_CONFIG_FILES([
   tests/apple-trailers/Makefile
   tests/bliptv/Makefile
   tests/tmdb/Makefile
+  tests/vimeo/Makefile
   tests/xml-factory/Makefile
 ])
 

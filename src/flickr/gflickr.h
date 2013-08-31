@@ -91,7 +91,7 @@ void g_flickr_set_per_page (GFlickr *f, gint per_page);
 
 void
 g_flickr_photos_getInfo (GFlickr *f,
-                         glong photo_id,
+                         const gchar *photo_id,
                          GFlickrHashTableCb callback,
                          gpointer user_data);
 
@@ -112,6 +112,9 @@ g_flickr_photos_getRecent (GFlickr *f,
 
 gchar *
 g_flickr_photo_url_original (GFlickr *f, GHashTable *photo);
+
+gchar *
+g_flickr_photo_url_small (GFlickr *f, GHashTable *photo);
 
 gchar *
 g_flickr_photo_url_thumbnail (GFlickr *f, GHashTable *photo);

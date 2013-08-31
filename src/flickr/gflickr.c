@@ -20,6 +20,9 @@
 #define FLICKR_PHOTO_ORIG_URL                           \
   "http://farm%s.static.flickr.com/%s/%s_%s_o.%s"
 
+#define FLICKR_PHOTO_SMALL_URL                          \
+  "http://farm%s.static.flickr.com/%s/%s_%s_n.jpg"
+
 #define FLICKR_PHOTO_THUMB_URL                          \
   "http://farm%s.static.flickr.com/%s/%s_%s_t.jpg"
 
@@ -500,7 +503,7 @@ g_flickr_set_per_page (GFlickr *f, gint per_page)
 
 void
 g_flickr_photos_getInfo (GFlickr *f,
-                         glong photo_id,
+                         const gchar *photo_id,
                          GFlickrHashTableCb callback,
                          gpointer user_data)
 {
@@ -508,7 +511,7 @@ g_flickr_photos_getInfo (GFlickr *f,
 
   gchar *params[2];
 
-  params[0] = g_strdup_printf ("photo_id=%ld", photo_id);
+  params[0] = g_strdup_printf ("photo_id=%s", photo_id);
   params[1] = g_strdup_printf ("method=%s", FLICKR_PHOTOS_GETINFO_METHOD);
 
   gchar *request = create_url (f, params, 2);
@@ -634,6 +637,34 @@ g_flickr_photo_url_original (GFlickr *f, GHashTable *photo)
                             photo_id,
                             o_secret,
                             extension);
+  }
+}
+
+gchar *
+g_flickr_photo_url_small (GFlickr *f, GHashTable *photo)
+{
+  gchar *farm_id;
+  gchar *secret;
+  gchar *photo_id;
+  gchar *server_id;
+
+  if (!photo) {
+    return NULL;
+  }
+
+  farm_id = g_hash_table_lookup (photo, "photo_farm");
+  secret = g_hash_table_lookup (photo, "photo_secret");
+  photo_id = g_hash_table_lookup (photo, "photo_id");
+  server_id = g_hash_table_lookup (photo, "photo_server");
+
+  if (!farm_id || !secret || !photo_id || !server_id) {
+    return NULL;
+  } else {
+    return g_strdup_printf (FLICKR_PHOTO_SMALL_URL,
+                            farm_id,
+                            server_id,
+                            photo_id,
+                            secret);
   }
 }
 
