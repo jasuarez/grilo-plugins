@@ -2520,6 +2520,7 @@ operation_call_send_xml_results (OperationCallData *data)
   DataRef *get_raw_data_reffed;
   DataRef *media_template_xpath_reffed;
   DataRef *xml_ctx_reffed;
+  DataRef *xml_doc_reffed;
   ExpandableString *xpath_query;
   FetchData *fetch_data;
   FetchItemData *fetch_item;
@@ -2549,7 +2550,8 @@ operation_call_send_xml_results (OperationCallData *data)
     return FALSE;
   }
 
-  xml_doc = dataref_value (data->xml_doc_reffed);
+  xml_doc_reffed = dataref_ref (data->xml_doc_reffed);
+  xml_doc = dataref_value (xml_doc_reffed);
   xml_ctx = xmlXPathNewContext (xml_doc);
   xml_ctx_reffed = dataref_new (xml_ctx, (GDestroyNotify) xmlXPathFreeContext);
 
@@ -2717,7 +2719,7 @@ operation_call_send_xml_results (OperationCallData *data)
         get_raw_data = get_raw_data_new ();
         get_raw_data->xpath_reffed = dataref_ref (media_template_xpath_reffed);
         get_raw_data->xml_ctx_reffed = dataref_ref (xml_ctx_reffed);
-        get_raw_data->xml_doc_reffed = dataref_ref (data->xml_doc_reffed);
+        get_raw_data->xml_doc_reffed = dataref_ref (xml_doc_reffed);
         get_raw_data->node = i;
         get_raw_data->namespace = media_template->namespace;
         get_raw_data->namespace_size = media_template->namespace_size;
@@ -2796,6 +2798,7 @@ operation_call_send_xml_results (OperationCallData *data)
   g_list_free (matching_templates);
   g_list_free_full (matching_xpath, (GDestroyNotify) dataref_unref);
   dataref_unref (xml_ctx_reffed);
+  dataref_unref (xml_doc_reffed);
 
   return FALSE;
 }
