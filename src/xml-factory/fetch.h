@@ -57,6 +57,7 @@ typedef struct _RegExpExpression {
 } RegExpExpression;
 
 typedef struct _RegExpInput {
+  gboolean decode;
   gboolean use_ref;
   union {
     gchar *buffer_id;
