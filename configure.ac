@@ -1252,6 +1252,7 @@ AC_CONFIG_FILES([
   tests/tmdb/Makefile
   tests/vimeo/Makefile
   tests/xml-factory/Makefile
+  tests/xml-factory/sources/xml-test-log.xml
 ])
 
 AC_OUTPUT
