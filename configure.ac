@@ -127,6 +127,8 @@ PKG_CHECK_MODULES(GDATA, libgdata >= 0.7.0, HAVE_GDATA=yes, HAVE_GDATA=no)
 
 PKG_CHECK_MODULES(LIBSOUP, libsoup-2.4, HAVE_LIBSOUP=yes, HAVE_LIBSOUP=no)
 
+PKG_CHECK_MODULES(LUA, lua5.2, HAVE_LUA=yes, HAVE_LUA=no)
+
 PKG_CHECK_MODULES(REST, rest-0.7, HAVE_REST=yes, HAVE_REST=no)
 
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0, HAVE_GTHREAD=yes, HAVE_GTHREAD=no)
@@ -1157,11 +1159,14 @@ AC_ARG_ENABLE(xml_factory,
                         if test "x$HAVE_REST" = "xno"; then
                            AC_MSG_ERROR([librest not found, install it or use --disable-xml-factory])
                         fi
+                        if test "x$HAVE_LUA" = "xno"; then
+                           AC_MSG_ERROR([lua5.2 not found, install it or use --disable-xml-factory])
+                        fi
                         ;;
                 esac
         ],
         [
-                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_JSON_GLIB" = "xyes" -a "x$HAVE_REST" = "xyes"; then
+                if test "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_XML" = "xyes" -a "x$HAVE_JSON_GLIB" = "xyes" -a "x$HAVE_REST" = "xyes" -a "x$HAVE_LUA" = "xyes"; then
                    enable_xml_factory=yes
                 else
                    enable_xml_factory=no
@@ -1179,9 +1184,9 @@ XML_FACTORY_PLUGIN_ID="grl-xml-factory"
 AC_SUBST(XML_FACTORY_PLUGIN_ID)
 AC_DEFINE_UNQUOTED([XML_FACTORY_PLUGIN_ID], ["$XML_FACTORY_PLUGIN_ID"], [XML Source Factory plugin ID])
 
-DEPS_XML_FACTORY_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $JSON_GLIB_CFLAGS $REST_CFLAGS"
+DEPS_XML_FACTORY_CFLAGS="$DEPS_CFLAGS $GRLNET_CFLAGS $XML_CFLAGS $JSON_GLIB_CFLAGS $REST_CFLAGS $LUA_CFLAGS"
 AC_SUBST(DEPS_XML_FACTORY_CFLAGS)
-DEPS_XML_FACTORY_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $JSON_GLIB_LIBS $REST_LIBS"
+DEPS_XML_FACTORY_LIBS="$DEPS_LIBS $GRLNET_LIBS $XML_LIBS $JSON_GLIB_LIBS $REST_LIBS $LUA_LIBS"
 AC_SUBST(DEPS_XML_FACTORY_LIBS)
 
 XML_FACTORY_SOURCE_LOCATION="grilo-plugins/${XML_FACTORY_PLUGIN_ID}"
