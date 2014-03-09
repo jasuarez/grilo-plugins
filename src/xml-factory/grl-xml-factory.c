@@ -280,6 +280,7 @@ static void xml_spec_get_basic_info (xmlNodePtr xml_node,
                                      gchar **id,
                                      gchar **name,
                                      gchar **description,
+                                     gchar **icon,
                                      xmlNodePtr *strings,
                                      xmlNodePtr *config,
                                      xmlNodePtr *script,
@@ -496,8 +497,11 @@ grl_xml_factory_source_new (const gchar *xml_spec_path,
                             GList *configs)
 {
   ExpandableString *expandable_source_description;
+  ExpandableString *expandable_source_icon;
   ExpandableString *expandable_source_name;
+  GFile *file;
   GHashTable *required_keys;
+  GIcon *icon = NULL;
   GList *config_keys = NULL;
   GList *located_strings = NULL;
   GList *operation;
@@ -505,12 +509,15 @@ grl_xml_factory_source_new (const gchar *xml_spec_path,
   GrlConfig *default_config;
   GrlConfig *merged_config;
   GrlMediaType supported_media_type = GRL_MEDIA_TYPE_NONE;
+  GrlXmlFactorySource *source;
   MediaTemplate *template;
   gboolean debug;
   gboolean supported_api_version = TRUE;
   gchar *expanded_source_description;
+  gchar *expanded_source_icon;
   gchar *expanded_source_name;
   gchar *source_description = NULL;
+  gchar *source_icon = NULL;
   gchar *source_id = NULL;
   gchar *source_name = NULL;
   gchar *user_agent;
@@ -603,8 +610,8 @@ grl_xml_factory_source_new (const gchar *xml_spec_path,
   /* Get source basic information */
   xml_node = xml_get_node (xml_node->children);
   xml_spec_get_basic_info (xml_node, &source_id, &source_name,
-                           &source_description, &xml_strings,
-                           &xml_config, &xml_script,
+                           &source_description, &source_icon,
+                           &xml_strings, &xml_config, &xml_script,
                            &xml_operation, &xml_provide);
 
   /* Check config */
@@ -621,6 +628,7 @@ grl_xml_factory_source_new (const gchar *xml_spec_path,
     g_free (source_id);
     g_free (source_name);
     g_free (source_description);
+    g_free (source_icon);
     xmlFreeDoc (xml_doc);
     return NULL;
   }
@@ -640,12 +648,13 @@ grl_xml_factory_source_new (const gchar *xml_spec_path,
       g_free (source_id);
       g_free (source_name);
       g_free (source_description);
+      g_free (source_icon);
       xmlFreeDoc (xml_doc);
       return NULL;
     }
   }
 
-  /* Expand source name and description */
+  /* Expand source name, description and icon */
   expandable_source_name = expandable_string_new (source_name,
                                                   merged_config,
                                                   located_strings);
@@ -656,18 +665,31 @@ grl_xml_factory_source_new (const gchar *xml_spec_path,
                                                          located_strings);
   expanded_source_description = expandable_string_get_value (expandable_source_description, NULL);
 
-  GrlXmlFactorySource *source =
-    g_object_new (GRL_XML_FACTORY_SOURCE_TYPE,
-                  "source-id", source_id,
-                  "source-name", expanded_source_name,
-                  "source-desc", expanded_source_description,
+  expandable_source_icon = expandable_string_new (source_icon,
+                                                  merged_config,
+                                                  located_strings);
+  expanded_source_icon = expandable_string_get_value (expandable_source_icon, NULL);
 
-                  NULL);
+  if (expanded_source_icon) {
+    file = g_file_new_for_uri (expanded_source_icon);
+    icon = g_file_icon_new (file);
+    g_object_unref (file);
+  }
 
+  source = g_object_new (GRL_XML_FACTORY_SOURCE_TYPE,
+                         "source-id", source_id,
+                         "source-name", expanded_source_name,
+                         "source-desc", expanded_source_description,
+                         "source-icon", icon,
+                         NULL);
+
+  g_clear_object (&icon);
   expandable_string_free_value (expandable_source_name, expanded_source_name);
   expandable_string_free_value (expandable_source_description, expanded_source_description);
+  expandable_string_free_value (expandable_source_icon, expanded_source_icon);
   expandable_string_free (expandable_source_name);
   expandable_string_free (expandable_source_description);
+  expandable_string_free (expandable_source_icon);
 
   source->priv->config = merged_config;
   source->priv->located_strings = located_strings;
@@ -1693,6 +1715,7 @@ xml_spec_get_basic_info (xmlNodePtr xml_node,
                          gchar **id,
                          gchar **name,
                          gchar **description,
+                         gchar **icon,
                          xmlNodePtr *strings,
                          xmlNodePtr *config,
                          xmlNodePtr *script,
@@ -1710,6 +1733,13 @@ xml_spec_get_basic_info (xmlNodePtr xml_node,
     xml_node = xml_get_node (xml_node->next);
   } else {
     *description = NULL;
+  }
+
+  if (xmlStrcmp (xml_node->name, (const xmlChar *) "icon") == 0) {
+    *icon = (gchar *) xmlNodeGetContent (xml_node);
+    xml_node = xml_get_node (xml_node->next);
+  } else {
+    *icon = NULL;
   }
 
   if (xmlStrcmp (xml_node->name, (const xmlChar *) "strings") == 0) {
